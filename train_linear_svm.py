@@ -5,26 +5,18 @@ from nltk.stem import PorterStemmer
 import string
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 
 # Load spaCy English Model and NLTK Stopwords
 nlp = spacy.load("en_core_web_sm")
 nltk.download('stopwords', quiet=True)
 
 def clean_text(text):
-    # Remove punctuations and numbers, and lowercase the text
     text = ''.join([char for char in text if char not in string.punctuation])
     text = ''.join([char for char in text if not char.isdigit()])
     return text.lower()
 
 def preprocess_data(data):
-    # Apply text cleaning, lowercasing, stopword removal, stemming, and lemmatization
     stop_words = set(stopwords.words('english'))
     stemmer = PorterStemmer()
     
@@ -35,54 +27,34 @@ def preprocess_data(data):
     
     return data
 
-def extract_features(data):
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(data['cleaned_text'])
-    feature_names = vectorizer.get_feature_names_out()
-    tfidf_data = pd.DataFrame(X.toarray(), columns=feature_names)
-    
-    return tfidf_data
-
-def apply_pca(tfidf_data):
-    pca = PCA()
-    reduced_data = pca.fit_transform(tfidf_data)
-    explained_variance = pca.explained_variance_ratio_
-    
-    return reduced_data, explained_variance
-
-def kmeans_clustering(data, n_clusters=10):
-    # [The entire kmeans_clustering function logic]
-
-def enhanced_unified_algorithm(input_path):
-    # [The entire enhanced_unified_algorithm function]
-
-# Load the labeled and unlabeled data
+# Load the labeled data (merged with K-Means pseudo-labels) and preprocess it
 labeled_data_path = r"C:\Users\TSLanka\Documents\GitHub\Hackathon\projectdescriptions.csv"
-unlabeled_data_path = r"C:/Users/TSLanka/Documents/GitHub/Hackathon/merged_data.csv"
-
 labeled_data = pd.read_csv(labeled_data_path)
-unlabeled_data = pd.read_csv(unlabeled_data_path)
 
-# Preprocess the labeled and unlabeled data
+# Add the Cluster column from kmeans_clusters_output.csv
+kmeans_clusters_data = pd.read_csv(r"C:/Users/TSLanka/Documents/GitHub/Hackathon/kmeans_clusters_output.csv")
+labeled_data['Cluster'] = kmeans_clusters_data['Cluster']
+
 labeled_data = preprocess_data(labeled_data)
+
+# Apply TF-IDF Vectorization on labeled data
+vectorizer = TfidfVectorizer()  
+X_labeled = vectorizer.fit_transform(labeled_data['cleaned_text'])
+y_labeled = labeled_data['Cluster']
+
+# Train the SVM on labeled data, explicitly setting dual to 'auto'
+clf = LinearSVC(random_state=0, max_iter=10000, dual='auto')
+clf.fit(X_labeled, y_labeled)
+
+# Load and preprocess the unlabeled data
+unlabeled_data_path = r"C:/Users/TSLanka/Documents/GitHub/Hackathon/merged_data.csv"
+unlabeled_data = pd.read_csv(unlabeled_data_path)
 unlabeled_data = preprocess_data(unlabeled_data)
 
-# Apply K-Means clustering and SVM training on labeled data
-output_dataframe = enhanced_unified_algorithm(labeled_data_path)
+# Transform the unlabeled data using the vectorizer fitted on labeled data
+X_unlabeled = vectorizer.transform(unlabeled_data['cleaned_text'])
 
-# Extract features for the unlabeled data
-tfidf_data_unlabeled = extract_features(unlabeled_data)
-
-# Transform the new unlabeled data using the same feature representation as labeled data
-X_unlabeled = tfidf_data_unlabeled
-
-# Train SVM on labeled data and predict labels for unlabeled data
-X = tfidf_data
-y = output_dataframe['Cluster']
-
-clf = LinearSVC(random_state=0, max_iter=10000)
-clf.fit(X, y)
-
+# Predict labels for the unlabeled data
 predicted_labels = clf.predict(X_unlabeled)
 unlabeled_data['Predicted_Label'] = predicted_labels
 
