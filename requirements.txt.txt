@@ -1,0 +1,6 @@
+# Create requirements.txt with the following content:
+# flask
+# scikit-learn
+# spacy
+# numpy
+
