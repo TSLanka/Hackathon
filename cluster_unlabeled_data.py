@@ -47,9 +47,6 @@ y_labeled = labeled_data['Cluster']
 kmeans = KMeans(n_clusters=10, random_state=0, n_init=20)  # Change the number of clusters and n_init value here
 kmeans.fit(X_labeled)
 
-# Train the SVM on labeled data, explicitly setting dual to 'auto'
-clf = LinearSVC(random_state=0, max_iter=10000, dual='auto')
-clf.fit(X_labeled, y_labeled)
 
 # Load and preprocess the unlabeled data
 unlabeled_data_path = r"C:/Users/TSLanka/Documents/GitHub/Hackathon/merged_data.csv"
@@ -59,9 +56,9 @@ unlabeled_data = preprocess_data(unlabeled_data)
 # Transform the unlabeled data using the vectorizer fitted on labeled data
 X_unlabeled = vectorizer.transform(unlabeled_data['cleaned_text'])
 
-# Predict labels for the unlabeled data
-predicted_labels = clf.predict(X_unlabeled)
-unlabeled_data['Predicted_Label'] = predicted_labels
+# Cluster the unlabeled data using K-Means
+cluster_labels = kmeans.predict(X_unlabeled)
+unlabeled_data['Cluster_Label'] = cluster_labels
 
-# Save the labeled data
-unlabeled_data.to_csv('labeled_data.csv', index=False)
+# Save the clustered data
+unlabeled_data.to_csv('clustered_data.csv', index=False)
