@@ -5,7 +5,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 
 # Load your reduced data (modify the path as needed)
-data = pd.read_csv('C:/Users/TSLanka/Documents/GitHub/Hackathon/reduced_data.csv')
+data = pd.read_csv(r"C:\Users\TSLanka\Documents\GitHub\Hackathon\reduced_data.csv")
 
 # Define a range of eps values to explore
 eps_values = np.linspace(0.1, 2.0, 20)
